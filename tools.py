@@ -12,6 +12,7 @@ from rasterio.features import rasterize
 from rasterio.transform import rowcol
 from rasterio.mask import mask
 from rasterio.windows import from_bounds
+import math
 
 def reproj_match(infile, match, outfile, resampling_method='bilinear', save_in='asc'):
     """Reproject a file to match the shape and projection of existing raster. 
@@ -415,3 +416,125 @@ def ba_from_vol(vol, a):
 def cf_from_ba(ba):
     cf = 0.1939 * ba / (0.1939 * ba + 1.69)
     return cf
+
+
+def stem_volume_to_LAI(V, tree='spruce'):
+    '''
+    Based on Lehtonen et al. 2007: Biomass expansion factors (BEFs) for Scots pine, 
+    Norway spruce and birch according to stand age for boreal forests
+    
+    V = volume [m3 ha-1]
+    tree = 'spruce' / 'pine' / 'birch'
+    '''
+    
+    SLA = {'pine': 6.8, 'spruce': 4.7, 'decid': 14.0}  # Härkönen et al. 2015 BER 20, 181-195
+
+    if tree == 'pine':
+        a = math.exp(-2.2532) # ln(a)
+        b = 0.7802
+    if tree == 'spruce':
+        a = math.exp(-1.4772)
+        b = 0.7718
+    if tree == 'decid':
+        a = 0.02542
+        b = 0.96
+
+    W_V = a * V**b # Mg ha-1
+    W_V = W_V * 1e3 # kg ha-1
+    W_V = W_V * 1e-4 # kg m-2
+    
+    LAI = W_V * SLA[tree] # m3 m-3
+    
+    return LAI
+
+
+def stem_volume_to_LAI_mVMI_nonlinear(V, tree='spruce'):
+    '''
+    Based on S.L. fitted nonlinear models using mVMI data on mineral soil
+    for pine, spruce and deciduous
+    
+    V = volume [m3 ha-1]
+    tree = 'spruce' / 'pine' / 'birch'
+    '''
+    
+    SLA = {'pine': 6.8, 'spruce': 4.7, 'decid': 14.0}  # Härkönen et al. 2015 BER 20, 181-195
+
+    if tree == 'pine':
+        a = -2.94e1
+        b = 4.70e0
+        c = -7.63e-3
+    if tree == 'spruce':
+        a = -7.01e1
+        b = 2.16e1
+        c = -3.43e-3
+    if tree == 'decid':
+        a = -7.55e1
+        b = 4.25e0
+        c = -1.42e-2
+
+    W_V = a + b * (1 - math.exp(c * V)) # 1000 kg ha-1
+    W_V = W_V * 1e3 # kg ha-1
+    W_V = W_V * 1e-4 # kg m-2
+    
+    LAI = W_V * SLA[tree] # m3 m-3
+    
+    return LAI
+
+def stem_volume_to_LAI_mVMI_nonlinear_2(V, tree='spruce'):
+    '''
+    Based on S.L. fitted nonlinear models using mVMI data on mineral soil
+    for pine, spruce and deciduous
+    
+    V = volume [m3 ha-1]
+    tree = 'spruce' / 'pine' / 'birch'
+    '''
+    
+    SLA = {'pine': 6.8, 'spruce': 4.7, 'decid': 14.0}  # Härkönen et al. 2015 BER 20, 181-195
+
+    if tree == 'pine':
+        a = -4.79e0
+        b = -6.08e-3
+    if tree == 'spruce':
+        a = 2.22e1
+        b = -2.97e-3
+    if tree == 'decid':
+        a = 3.93e0
+        b = -9.28e-3
+
+    W_V = a * (1 - math.exp(b * V)) # 1000 kg ha-1
+    W_V = W_V * 1e3 # kg ha-1
+    W_V = W_V * 1e-4 # kg m-2
+    
+    LAI = W_V * SLA[tree] # m3 m-3
+    
+    return LAI
+
+def stem_volume_to_LAI_mVMI_fit(V, tree='spruce'):
+    '''
+    Based on Lehtonen et al. 2007: Biomass expansion factors (BEFs) for Scots pine, 
+    Norway spruce and birch according to stand age for boreal forests
+    Parameters optimized by Samuli with Hyytiälä mVMI data.
+    
+    V = volume [m3 ha-1]
+    tree = 'spruce' / 'pine' / 'birch'
+    '''
+    
+    SLA = {'pine': 6.8, 'spruce': 4.7, 'decid': 14.0}  # Härkönen et al. 2015 BER 20, 181-195
+
+    if tree == 'pine':
+        a = 0.03768
+        b = 0.86
+    if tree == 'spruce':
+        a = 0.12304
+        b = 0.81
+    if tree == 'decid':
+        a = 0.02542
+        b = 0.96
+
+    W_V = a * V**b # Mg ha-1
+    W_V = W_V * 1e3 # kg ha-1
+    W_V = W_V * 1e-4 # kg m-2
+    
+    LAI = W_V * SLA[tree] # m3 m-3
+    
+    return LAI
