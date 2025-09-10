@@ -30,7 +30,9 @@ def reproj_match(infile, match, outfile, resampling_method='bilinear', save_in='
         resample_as = Resampling.nearest
     if resampling_method == 'average':
         resample_as = Resampling.average
-        
+    if resampling_method == 'min':
+        resample_as = Resampling.min
+
     # open input
     with rasterio.open(infile) as src:
         src_transform = src.transform
