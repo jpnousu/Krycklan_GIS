@@ -540,3 +540,37 @@ def stem_volume_to_LAI_mVMI_fit(V, tree='spruce'):
     LAI = W_V * SLA[tree] # m3 m-3
     
     return LAI
+
+
+
+def update_mask(mask_path, length_path, depth_path, distance_path, out_path):
+    """Update mask so it only keeps cells where all info rasters have valid values."""
+
+    nodata_val = -9999
+    with rasterio.open(mask_path) as mask_src, \
+         rasterio.open(length_path) as length_src, \
+         rasterio.open(depth_path) as depth_src, \
+         rasterio.open(distance_path) as dist_src:
+
+        mask = mask_src.read(1)
+        length = length_src.read(1)
+        depth = depth_src.read(1)
+        dist = dist_src.read(1)
+
+        # Find valid cells (all layers must be valid, i.e. not NoData)
+        valid = (
+            (mask != mask_src.nodata) &
+            (length != length_src.nodata) &
+            (depth != depth_src.nodata) &
+            (dist != dist_src.nodata)
+        )
+
+        # Create new mask: keep only valid cells, everything else NoData
+        new_mask = np.where(valid, mask, nodata_val)
+
+        # Write updated mask
+        profile = mask_src.profile
+        profile.update(dtype=rasterio.int32, nodata=nodata_val)
+
+        with rasterio.open(out_path, "w", **profile) as dst:
+            dst.write(new_mask, 1)

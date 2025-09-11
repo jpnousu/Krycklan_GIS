@@ -1,0 +1,19 @@
+INITIAL PROCESSING
+initial_dem.ipynb
+initial_stream.inpynb
+initial_veg.ipynb
+initial_soil.ipynb
+
+MAIN PROCESSING
+dem_multi.ipynb
+stream_depths.ipynb
+stream_dist_n_len.ipynb
+streams_finalize.ipynb
+clip_n_finalize.ipynb
+
+VISUALIZATION
+plot_gis.ipynb
+stream_elev_process.ipynb
+
+EXPORT
+spafhy_gis.ipynb
