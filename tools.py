@@ -39,7 +39,7 @@ def reproj_match(infile, match, outfile, resampling_method='bilinear', save_in='
         
         # open input to match
         with rasterio.open(match) as match:
-            dst_crs = match.crs
+            dst_crs = match.crs if match.crs is not None else src.crs
             dst_nodata = match.meta['nodata']
             
             # calculate the output transform matrix
@@ -543,34 +543,43 @@ def stem_volume_to_LAI_mVMI_fit(V, tree='spruce'):
 
 
 
-def update_mask(mask_path, length_path, depth_path, distance_path, out_path):
+def update_mask(mask_path, length_path, depth_path, distance_path, width_path, out_path):
     """Update mask so it only keeps cells where all info rasters have valid values."""
 
     nodata_val = -9999
-    with rasterio.open(mask_path) as mask_src, \
-         rasterio.open(length_path) as length_src, \
-         rasterio.open(depth_path) as depth_src, \
-         rasterio.open(distance_path) as dist_src:
 
-        mask = mask_src.read(1)
-        length = length_src.read(1)
-        depth = depth_src.read(1)
-        dist = dist_src.read(1)
+    with rasterio.open(mask_path) as src:
+        mask = src.read(1)
+        mask_nodata = src.nodata
+        profile = src.profile.copy()
 
-        # Find valid cells (all layers must be valid, i.e. not NoData)
-        valid = (
-            (mask != mask_src.nodata) &
-            (length != length_src.nodata) &
-            (depth != depth_src.nodata) &
-            (dist != dist_src.nodata)
-        )
+    with rasterio.open(length_path) as src:
+        length = src.read(1)
+        length_nodata = src.nodata
 
-        # Create new mask: keep only valid cells, everything else NoData
-        new_mask = np.where(valid, mask, nodata_val)
+    with rasterio.open(depth_path) as src:
+        depth = src.read(1)
+        depth_nodata = src.nodata
 
-        # Write updated mask
-        profile = mask_src.profile
-        profile.update(dtype=rasterio.int32, nodata=nodata_val)
+    with rasterio.open(distance_path) as src:
+        dist = src.read(1)
+        dist_nodata = src.nodata
 
-        with rasterio.open(out_path, "w", **profile) as dst:
-            dst.write(new_mask, 1)
+    with rasterio.open(width_path) as src:
+        width = src.read(1)
+        width_nodata = src.nodata
+
+    valid = (
+        (mask != mask_nodata) &
+        (length != length_nodata) &
+        (depth != depth_nodata) &
+        (dist != dist_nodata) &
+        (width != width_nodata)
+    )
+
+    new_mask = np.where(valid, mask, nodata_val)
+
+    profile.update(dtype=rasterio.int32, nodata=nodata_val)
+
+    with rasterio.open(out_path, "w", **profile) as dst:
+        dst.write(new_mask, 1)

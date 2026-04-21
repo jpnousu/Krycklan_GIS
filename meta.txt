@@ -7,7 +7,7 @@ initial_soil.ipynb
 MAIN PROCESSING
 dem_multi.ipynb
 stream_depths.ipynb
-stream_dist_n_len.ipynb
+stream_metrics.ipynb
 streams_finalize.ipynb
 clip_n_finalize.ipynb
 
