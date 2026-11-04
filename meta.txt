@@ -3,11 +3,12 @@ initial_dem.ipynb
 initial_stream.inpynb
 initial_veg.ipynb
 initial_soil.ipynb
+SLU_soilmoisture.ipynb
 
 MAIN PROCESSING
 dem_multi.ipynb
-stream_depths.ipynb
-stream_metrics.ipynb
+stream_depths.ipynb / streams_depths_resampled.ipynb
+stream_metrics.ipynb / stream_metrics_resampled.ipynb
 streams_finalize.ipynb
 clip_n_finalize.ipynb
 
