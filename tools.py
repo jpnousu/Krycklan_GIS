@@ -545,7 +545,8 @@ def stem_volume_to_LAI_mVMI_fit(V, tree='spruce'):
 
 
 
-def update_mask(mask_path, length_path, depth_path, distance_path, width_path, out_path):
+def update_mask(mask_path, length_path, depth_path, distance_path, width_path, out_path,
+                catchment_mask_path=None):
     """Update mask so it only keeps cells where all info rasters have valid values."""
 
     nodata_val = -9999
@@ -578,6 +579,14 @@ def update_mask(mask_path, length_path, depth_path, distance_path, width_path, o
         (dist != dist_nodata) &
         (width != width_nodata)
     )
+
+    if catchment_mask_path is not None:
+        with rasterio.open(catchment_mask_path) as src:
+            if (src.shape != mask.shape or src.transform != profile["transform"]
+                    or src.crs != profile["crs"]):
+                raise ValueError(f"Catchment mask is not aligned with stream mask: {catchment_mask_path}")
+            catchment = src.read(1)
+            valid &= (src.read_masks(1) != 0) & np.isfinite(catchment)
 
     new_mask = np.where(valid, mask, nodata_val)
 
